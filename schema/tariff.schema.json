@@ -1,0 +1,101 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "China Residential Time-of-Use Tariff",
+  "description": "中国居民分时（峰谷）电价数据结构。每个省份一个文件。",
+  "type": "object",
+  "required": ["region", "province_code", "effective_date", "source", "confidence", "periods"],
+  "additionalProperties": true,
+  "properties": {
+    "region": {
+      "type": "string",
+      "description": "省级行政区名称，如「浙江省」"
+    },
+    "province_code": {
+      "type": "string",
+      "description": "省份拼音缩写，如 ZJ"
+    },
+    "region_code": {
+      "type": "string",
+      "description": "ISO 3166-2 代码，如 CN-ZJ"
+    },
+    "effective_date": {
+      "type": "string",
+      "description": "该电价政策的生效日期 YYYY-MM-DD，或已知的最早适用日期"
+    },
+    "accessed_date": {
+      "type": "string",
+      "description": "数据抓取/核对日期 YYYY-MM-DD"
+    },
+    "source": {
+      "type": "object",
+      "required": ["name", "url"],
+      "properties": {
+        "name": { "type": "string", "description": "来源机构与文件名" },
+        "url": { "type": "string", "description": "来源链接" },
+        "publisher": { "type": "string", "description": "发布单位" },
+        "doc_no": { "type": "string", "description": "政策文号，如「粤发改价格〔2021〕331号」" }
+      }
+    },
+    "confidence": {
+      "type": "string",
+      "enum": ["official", "official-media", "unverified"],
+      "description": "可信度分级：official=政府/电网官网原文；official-media=官方媒体转载；unverified=自媒体汇总，未经官方核实"
+    },
+    "customer_type": {
+      "type": "string",
+      "description": "适用用户类型，如「居民一户一表」「居民电采暖」「居民电动汽车充电设施」"
+    },
+    "optional": {
+      "type": "boolean",
+      "description": "是否为居民自愿选择执行（true 表示非默认）"
+    },
+    "currency": { "type": "string", "default": "CNY" },
+    "unit": { "type": "string", "default": "元/kWh" },
+    "timezone": { "type": "string", "default": "Asia/Shanghai" },
+    "notes": { "type": "string" },
+    "periods": {
+      "type": "array",
+      "minItems": 2,
+      "description": "峰平谷时段定义。跨天时段用 start > end 表示（如 22:00 → 08:00）",
+      "items": {
+        "type": "object",
+        "required": ["name", "start", "end", "price"],
+        "properties": {
+          "name": { "type": "string", "enum": ["sharp", "peak", "flat", "valley", "deep_valley"] },
+          "label": { "type": "string" },
+          "start": { "type": "string", "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$" },
+          "end": { "type": "string", "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$" },
+          "price": { "type": "number" }
+        }
+      }
+    },
+    "seasonal": {
+      "type": "array",
+      "description": "季节性差异化时段（如山东采暖季、四川三季）。存在时优先于 periods",
+      "items": {
+        "type": "object",
+        "required": ["season", "months", "periods"],
+        "properties": {
+          "season": { "type": "string" },
+          "months": { "type": "array", "items": { "type": "integer" } },
+          "periods": { "type": "array" }
+        }
+      }
+    },
+    "tiers": {
+      "type": "array",
+      "description": "阶梯电价档次。分时电价通常与阶梯叠加，按「先分时后阶梯」计算",
+      "items": {
+        "type": "object",
+        "required": ["tier", "range"],
+        "properties": {
+          "tier": { "type": "integer" },
+          "range": { "type": "string", "description": "电量区间描述" },
+          "flat": { "type": "number" },
+          "peak": { "type": "number" },
+          "valley": { "type": "number" }
+        }
+      }
+    }
+  }
+}
